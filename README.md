@@ -1,3 +1,3 @@
 # Migration Tracker Backend
 
-FastAPI backend for the migration tracking SaaS tool.
+FastAPI backend with project/task models and DB schema initialized.
