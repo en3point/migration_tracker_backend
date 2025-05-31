@@ -274,3 +274,63 @@ def delete_project_phase(phase_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Project phase deleted successfully"}
 
+# ------------------ EXCEL IMPORT ENDPOINT ------------------
+from fastapi import File, UploadFile
+import pandas as pd
+from io import BytesIO
+
+@router.post("/import-excel/")
+def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    content = file.file.read()
+    excel_data = pd.read_excel(BytesIO(content), sheet_name=None)
+
+    master_df = excel_data.get("MasterData")
+    overview_df = excel_data.get("Overview")
+
+    if master_df is not None:
+        for i, row in master_df.iterrows():
+            team_name = row.get("Unnamed: 1")
+            email_to = row.get("Unnamed: 2")
+            email_cc = row.get("Unnamed: 3")
+            if pd.notna(team_name) and team_name != "Team":
+                if not db.query(Team).filter_by(name=team_name).first():
+                    db_team = Team(name=team_name, email_to=email_to, email_cc=email_cc)
+                    db.add(db_team)
+
+            date_val = row.get("Unnamed: 8")
+            label_val = row.get("Unnamed: 9")
+            if pd.notna(date_val) and pd.notna(label_val):
+                if not db.query(ProjectPhase).filter_by(date=date_val).first():
+                    db_phase = ProjectPhase(date=date_val, label=label_val)
+                    db.add(db_phase)
+
+    if overview_df is not None:
+        for i, row in overview_df.iterrows():
+            subsystem_name = row.get("Unnamed: 2")
+            vendor_system = row.get("Unnamed: 3")
+            subject = row.get("Unnamed: 4")
+            description = row.get("Unnamed: 4")
+            detailed_description = row.get("Unnamed: 50")
+            if pd.notna(subsystem_name) and subsystem_name != "Subsystem":
+                subsystem = db.query(Subsystem).filter_by(name=subsystem_name).first()
+                if not subsystem:
+                    subsystem = Subsystem(name=subsystem_name)
+                    db.add(subsystem)
+                    db.commit()
+                    db.refresh(subsystem)
+
+                task = Task(
+                    subsystem_id=subsystem.id,
+                    team_id=None,
+                    vendor_system=vendor_system,
+                    subject=subject,
+                    description=description,
+                    detailed_description=detailed_description,
+                    start_date=pd.to_datetime("2025-03-01"),  # Replace with actual logic
+                    end_date=pd.to_datetime("2025-04-01"),    # Replace with actual logic
+                    status_by_day={}
+                )
+                db.add(task)
+
+    db.commit()
+    return {"message": "Excel data imported successfully"}
