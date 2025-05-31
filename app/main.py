@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from app.api import router
+from app.api import tasks  # Import your task router
 
 app = FastAPI()
 
-app.include_router(router)
+# Register the router
+app.include_router(tasks.router, prefix="", tags=["Tasks"])
