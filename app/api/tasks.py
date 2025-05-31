@@ -160,3 +160,53 @@ def create_project_phase(phase: ProjectPhaseCreate, db: Session = Depends(get_db
 @router.get("/phases/", response_model=List[ProjectPhaseOut])
 def read_project_phases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(ProjectPhase).offset(skip).limit(limit).all()
+
+
+... # Keep existing content
+
+# ------------------ DAILY SUMMARY SCHEMA ------------------
+class DailySummary(BaseModel):
+    date: date
+    subsystem_id: Optional[int] = None
+    team_id: Optional[int] = None
+    completed_tasks: List[TaskOut]
+    pending_tasks: List[TaskOut]
+
+# ------------------ DAILY SUMMARY ENDPOINT ------------------
+@router.get("/daily-summary/", response_model=DailySummary)
+def get_daily_summary(
+    date_query: date,
+    subsystem_id: Optional[int] = None,
+    team_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Task).filter(
+        Task.start_date <= date_query,
+        Task.end_date >= date_query
+    )
+    if subsystem_id:
+        query = query.filter(Task.subsystem_id == subsystem_id)
+    if team_id:
+        query = query.filter(Task.team_id == team_id)
+
+    tasks = query.all()
+    completed = []
+    pending = []
+
+    for task in tasks:
+        status = task.status_by_day.get(str(date_query), "Pending")
+        serialized = TaskOut.from_orm(task)
+        if status.lower() == "done":
+            completed.append(serialized)
+        else:
+            pending.append(serialized)
+
+    return DailySummary(
+        date=date_query,
+        subsystem_id=subsystem_id,
+        team_id=team_id,
+        completed_tasks=completed,
+        pending_tasks=pending
+    )
+
+
