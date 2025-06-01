@@ -11,6 +11,9 @@ class TeamBase(BaseModel):
 class TeamCreate(TeamBase):
     pass
 
+class TeamUpdate(TeamBase):
+    pass
+
 class TeamRead(TeamBase):
     id: int
     class Config:
@@ -20,6 +23,9 @@ class SubsystemBase(BaseModel):
     name: str
 
 class SubsystemCreate(SubsystemBase):
+    pass
+
+class SubsystemUpdate(SubsystemBase):
     pass
 
 class SubsystemRead(SubsystemBase):
@@ -32,6 +38,9 @@ class ProjectPhaseBase(BaseModel):
     label: str
 
 class ProjectPhaseCreate(ProjectPhaseBase):
+    pass
+
+class ProjectPhaseUpdate(ProjectPhaseBase):
     pass
 
 class ProjectPhaseRead(ProjectPhaseBase):

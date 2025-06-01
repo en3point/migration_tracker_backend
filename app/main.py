@@ -1,23 +1,24 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import router  # 👈 make sure this points to your router
+from app.api.endpoints import router  # ✅ Updated to match actual file path
 from app.db.database import Base, engine
 
 app = FastAPI()
 
-# ✅ Enable CORS
+# ✅ Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with your Vercel frontend URL later
+    allow_origins=["*"],  # Replace with Vercel frontend domain for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ✅ Create DB tables
 Base.metadata.create_all(bind=engine)
 
-# ✅ Global error handler to still return CORS on 500s
+# ✅ Global error handler that preserves CORS headers
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -31,6 +32,5 @@ async def global_exception_handler(request: Request, exc: Exception):
         },
     )
 
-# ✅ THIS is the line you’re missing
+# ✅ Register all routes
 app.include_router(router)
-
