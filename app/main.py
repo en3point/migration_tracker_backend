@@ -1,17 +1,20 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from app.api import router  # 👈 make sure this points to your router
 
 app = FastAPI()
 
+# ✅ Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust as needed for your frontend domain
+    allow_origins=["*"],  # Replace with your Vercel frontend URL later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ✅ Global error handler to still return CORS on 500s
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -24,3 +27,6 @@ async def global_exception_handler(request: Request, exc: Exception):
             "Access-Control-Allow-Headers": "*",
         },
     )
+
+# ✅ THIS is the line you’re missing
+app.include_router(router)
