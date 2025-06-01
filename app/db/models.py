@@ -5,6 +5,7 @@ from app.db.database import Base
 
 class Team(Base):
     __tablename__ = "teams"
+    __table_args__ = {'extend_existing': True}  # ✅ Prevent redefinition error
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     email_to = Column(String)
@@ -13,18 +14,21 @@ class Team(Base):
 
 class Subsystem(Base):
     __tablename__ = "subsystems"
+    __table_args__ = {'extend_existing': True}  # ✅ Prevent redefinition error
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     tasks = relationship("Task", back_populates="subsystem")
 
 class ProjectPhase(Base):
     __tablename__ = "project_phases"
+    __table_args__ = {'extend_existing': True}  # ✅ Prevent redefinition error
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, unique=True)
     label = Column(String)
 
 class Task(Base):
     __tablename__ = "tasks"
+    __table_args__ = {'extend_existing': True}  # ✅ Prevent redefinition error
     id = Column(Integer, primary_key=True, index=True)
     subsystem_id = Column(Integer, ForeignKey("subsystems.id"))
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
