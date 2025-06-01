@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import router  # 👈 make sure this points to your router
+from app.db.database import Base, engine
 
 app = FastAPI()
 
@@ -13,6 +14,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+Base.metadata.create_all(bind=engine)
 
 # ✅ Global error handler to still return CORS on 500s
 @app.exception_handler(Exception)
