@@ -1,7 +1,17 @@
 from fastapi import FastAPI
-from app.api import tasks  # Import your task router
+from app.api import router
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI()  # ✅ must come first
 
-# Register the router
-app.include_router(tasks.router, prefix="", tags=["Tasks"])
+# ✅ then apply CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change to frontend domain if needed later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ✅ then include your API router
+app.include_router(router)
