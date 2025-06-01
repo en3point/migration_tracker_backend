@@ -33,3 +33,4 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # ✅ THIS is the line you’re missing
 app.include_router(router)
+
