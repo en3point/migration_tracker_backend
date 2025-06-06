@@ -1,86 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException
+// app/api/endpoints/tasks.py (routes only)
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
-from app.models import Task, Team, Subsystem, ProjectPhase
-from pydantic import BaseModel
-from typing import List, Optional
+from app.db.models import Task, Team, Subsystem, ProjectPhase
+from app.db.schemas import TaskCreate, TaskUpdate, TaskOut, TeamCreate, TeamOut, SubsystemCreate, SubsystemOut, ProjectPhaseCreate, ProjectPhaseOut, DailySummary
 from datetime import date
+from typing import List, Optional
+import pandas as pd
+from io import BytesIO
 
 router = APIRouter()
 
-# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-# ------------------ TASK SCHEMAS ------------------
-class TaskBase(BaseModel):
-    subsystem_id: int
-    team_id: int
-    vendor_system: Optional[str] = None
-    subject: str
-    description: str
-    detailed_description: Optional[str] = None
-    start_date: date
-    end_date: date
-    status_by_day: Optional[dict] = {}
-
-class TaskCreate(TaskBase):
-    pass
-
-class TaskUpdate(TaskBase):
-    pass
-
-class TaskOut(TaskBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-# ------------------ TEAM SCHEMAS ------------------
-class TeamBase(BaseModel):
-    name: str
-    email_to: Optional[str] = None
-    email_cc: Optional[str] = None
-
-class TeamCreate(TeamBase):
-    pass
-
-class TeamOut(TeamBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-# ------------------ SUBSYSTEM SCHEMAS ------------------
-class SubsystemBase(BaseModel):
-    name: str
-
-class SubsystemCreate(SubsystemBase):
-    pass
-
-class SubsystemOut(SubsystemBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-# ------------------ PROJECT PHASE SCHEMAS ------------------
-class ProjectPhaseBase(BaseModel):
-    date: date
-    label: str
-
-class ProjectPhaseCreate(ProjectPhaseBase):
-    pass
-
-class ProjectPhaseOut(ProjectPhaseBase):
-    id: int
-
-    class Config:
-        orm_mode = True
 
 # ------------------ TASK ENDPOINTS ------------------
 @router.post("/tasks/", response_model=TaskOut)
@@ -135,6 +71,26 @@ def create_team(team: TeamCreate, db: Session = Depends(get_db)):
 def read_teams(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(Team).offset(skip).limit(limit).all()
 
+@router.put("/teams/{team_id}", response_model=TeamOut)
+def update_team(team_id: int, team: TeamCreate, db: Session = Depends(get_db)):
+    db_team = db.query(Team).filter(Team.id == team_id).first()
+    if not db_team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    for key, value in team.dict().items():
+        setattr(db_team, key, value)
+    db.commit()
+    db.refresh(db_team)
+    return db_team
+
+@router.delete("/teams/{team_id}")
+def delete_team(team_id: int, db: Session = Depends(get_db)):
+    db_team = db.query(Team).filter(Team.id == team_id).first()
+    if not db_team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    db.delete(db_team)
+    db.commit()
+    return {"message": "Team deleted successfully"}
+
 # ------------------ SUBSYSTEM ENDPOINTS ------------------
 @router.post("/subsystems/", response_model=SubsystemOut)
 def create_subsystem(subsystem: SubsystemCreate, db: Session = Depends(get_db)):
@@ -148,7 +104,27 @@ def create_subsystem(subsystem: SubsystemCreate, db: Session = Depends(get_db)):
 def read_subsystems(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(Subsystem).offset(skip).limit(limit).all()
 
-# ------------------ PROJECT PHASE ENDPOINTS ------------------
+@router.put("/subsystems/{subsystem_id}", response_model=SubsystemOut)
+def update_subsystem(subsystem_id: int, subsystem: SubsystemCreate, db: Session = Depends(get_db)):
+    db_subsystem = db.query(Subsystem).filter(Subsystem.id == subsystem_id).first()
+    if not db_subsystem:
+        raise HTTPException(status_code=404, detail="Subsystem not found")
+    for key, value in subsystem.dict().items():
+        setattr(db_subsystem, key, value)
+    db.commit()
+    db.refresh(db_subsystem)
+    return db_subsystem
+
+@router.delete("/subsystems/{subsystem_id}")
+def delete_subsystem(subsystem_id: int, db: Session = Depends(get_db)):
+    db_subsystem = db.query(Subsystem).filter(Subsystem.id == subsystem_id).first()
+    if not db_subsystem:
+        raise HTTPException(status_code=404, detail="Subsystem not found")
+    db.delete(db_subsystem)
+    db.commit()
+    return {"message": "Subsystem deleted successfully"}
+
+# ------------------ PHASE ENDPOINTS ------------------
 @router.post("/phases/", response_model=ProjectPhaseOut)
 def create_project_phase(phase: ProjectPhaseCreate, db: Session = Depends(get_db)):
     db_phase = ProjectPhase(**phase.dict())
@@ -161,20 +137,27 @@ def create_project_phase(phase: ProjectPhaseCreate, db: Session = Depends(get_db
 def read_project_phases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(ProjectPhase).offset(skip).limit(limit).all()
 
+@router.put("/phases/{phase_id}", response_model=ProjectPhaseOut)
+def update_project_phase(phase_id: int, phase: ProjectPhaseCreate, db: Session = Depends(get_db)):
+    db_phase = db.query(ProjectPhase).filter(ProjectPhase.id == phase_id).first()
+    if not db_phase:
+        raise HTTPException(status_code=404, detail="Project phase not found")
+    for key, value in phase.dict().items():
+        setattr(db_phase, key, value)
+    db.commit()
+    db.refresh(db_phase)
+    return db_phase
 
-... # Keep existing content
+@router.delete("/phases/{phase_id}")
+def delete_project_phase(phase_id: int, db: Session = Depends(get_db)):
+    db_phase = db.query(ProjectPhase).filter(ProjectPhase.id == phase_id).first()
+    if not db_phase:
+        raise HTTPException(status_code=404, detail="Project phase not found")
+    db.delete(db_phase)
+    db.commit()
+    return {"message": "Project phase deleted successfully"}
 
-... # Keep existing content
-
-# ------------------ DAILY SUMMARY SCHEMA ------------------
-class DailySummary(BaseModel):
-    date: date
-    subsystem_id: Optional[int] = None
-    team_id: Optional[int] = None
-    completed_tasks: List[TaskOut]
-    pending_tasks: List[TaskOut]
-
-# ------------------ DAILY SUMMARY ENDPOINT ------------------
+# ------------------ DAILY SUMMARY ------------------
 @router.get("/daily-summary/", response_model=DailySummary)
 def get_daily_summary(
     date_query: date,
@@ -211,74 +194,7 @@ def get_daily_summary(
         pending_tasks=pending
     )
 
-# ------------------ TEAM UPDATE ENDPOINT ------------------
-@router.put("/teams/{team_id}", response_model=TeamOut)
-def update_team(team_id: int, team: TeamCreate, db: Session = Depends(get_db)):
-    db_team = db.query(Team).filter(Team.id == team_id).first()
-    if not db_team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    for key, value in team.dict().items():
-        setattr(db_team, key, value)
-    db.commit()
-    db.refresh(db_team)
-    return db_team
-
-@router.delete("/teams/{team_id}")
-def delete_team(team_id: int, db: Session = Depends(get_db)):
-    db_team = db.query(Team).filter(Team.id == team_id).first()
-    if not db_team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    db.delete(db_team)
-    db.commit()
-    return {"message": "Team deleted successfully"}
-
-# ------------------ SUBSYSTEM UPDATE ENDPOINT ------------------
-@router.put("/subsystems/{subsystem_id}", response_model=SubsystemOut)
-def update_subsystem(subsystem_id: int, subsystem: SubsystemCreate, db: Session = Depends(get_db)):
-    db_subsystem = db.query(Subsystem).filter(Subsystem.id == subsystem_id).first()
-    if not db_subsystem:
-        raise HTTPException(status_code=404, detail="Subsystem not found")
-    for key, value in subsystem.dict().items():
-        setattr(db_subsystem, key, value)
-    db.commit()
-    db.refresh(db_subsystem)
-    return db_subsystem
-
-@router.delete("/subsystems/{subsystem_id}")
-def delete_subsystem(subsystem_id: int, db: Session = Depends(get_db)):
-    db_subsystem = db.query(Subsystem).filter(Subsystem.id == subsystem_id).first()
-    if not db_subsystem:
-        raise HTTPException(status_code=404, detail="Subsystem not found")
-    db.delete(db_subsystem)
-    db.commit()
-    return {"message": "Subsystem deleted successfully"}
-
-# ------------------ PROJECT PHASE UPDATE ENDPOINT ------------------
-@router.put("/phases/{phase_id}", response_model=ProjectPhaseOut)
-def update_project_phase(phase_id: int, phase: ProjectPhaseCreate, db: Session = Depends(get_db)):
-    db_phase = db.query(ProjectPhase).filter(ProjectPhase.id == phase_id).first()
-    if not db_phase:
-        raise HTTPException(status_code=404, detail="Project phase not found")
-    for key, value in phase.dict().items():
-        setattr(db_phase, key, value)
-    db.commit()
-    db.refresh(db_phase)
-    return db_phase
-
-@router.delete("/phases/{phase_id}")
-def delete_project_phase(phase_id: int, db: Session = Depends(get_db)):
-    db_phase = db.query(ProjectPhase).filter(ProjectPhase.id == phase_id).first()
-    if not db_phase:
-        raise HTTPException(status_code=404, detail="Project phase not found")
-    db.delete(db_phase)
-    db.commit()
-    return {"message": "Project phase deleted successfully"}
-
-# ------------------ EXCEL IMPORT ENDPOINT ------------------
-from fastapi import File, UploadFile
-import pandas as pd
-from io import BytesIO
-
+# ------------------ EXCEL IMPORT ------------------
 @router.post("/import-excel/")
 def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
     content = file.file.read()
@@ -288,7 +204,7 @@ def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
     overview_df = excel_data.get("Overview")
 
     if master_df is not None:
-        for i, row in master_df.iterrows():
+        for _, row in master_df.iterrows():
             team_name = row.get("Unnamed: 1")
             email_to = row.get("Unnamed: 2")
             email_cc = row.get("Unnamed: 3")
@@ -305,7 +221,7 @@ def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
                     db.add(db_phase)
 
     if overview_df is not None:
-        for i, row in overview_df.iterrows():
+        for _, row in overview_df.iterrows():
             subsystem_name = row.get("Unnamed: 2")
             vendor_system = row.get("Unnamed: 3")
             subject = row.get("Unnamed: 4")
@@ -326,8 +242,8 @@ def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
                     subject=subject,
                     description=description,
                     detailed_description=detailed_description,
-                    start_date=pd.to_datetime("2025-03-01"),  # Replace with actual logic
-                    end_date=pd.to_datetime("2025-04-01"),    # Replace with actual logic
+                    start_date=pd.to_datetime("2025-03-01"),
+                    end_date=pd.to_datetime("2025-04-01"),
                     status_by_day={}
                 )
                 db.add(task)

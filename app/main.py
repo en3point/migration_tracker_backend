@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import router  # ✅ Updated to match actual file path
+from app.api.endpoints.tasks import router as tasks_router
 from app.db.database import Base, engine
 
 app = FastAPI()
@@ -33,4 +33,4 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # ✅ Register all routes
-app.include_router(router)
+app.include_router(tasks_router)

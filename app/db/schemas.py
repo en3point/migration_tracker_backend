@@ -1,53 +1,9 @@
-# schemas.py
+# app/db/schemas.py
 from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Optional, List
 from datetime import date
 
-class TeamBase(BaseModel):
-    name: str
-    email_to: Optional[str] = None
-    email_cc: Optional[str] = None
-
-class TeamCreate(TeamBase):
-    pass
-
-class TeamUpdate(TeamBase):
-    pass
-
-class TeamRead(TeamBase):
-    id: int
-    class Config:
-        orm_mode = True
-
-class SubsystemBase(BaseModel):
-    name: str
-
-class SubsystemCreate(SubsystemBase):
-    pass
-
-class SubsystemUpdate(SubsystemBase):
-    pass
-
-class SubsystemRead(SubsystemBase):
-    id: int
-    class Config:
-        orm_mode = True
-
-class ProjectPhaseBase(BaseModel):
-    date: date
-    label: str
-
-class ProjectPhaseCreate(ProjectPhaseBase):
-    pass
-
-class ProjectPhaseUpdate(ProjectPhaseBase):
-    pass
-
-class ProjectPhaseRead(ProjectPhaseBase):
-    id: int
-    class Config:
-        orm_mode = True
-
+# ------------------ TASK SCHEMAS ------------------
 class TaskBase(BaseModel):
     subsystem_id: int
     team_id: Optional[int] = None
@@ -57,12 +13,66 @@ class TaskBase(BaseModel):
     detailed_description: Optional[str] = None
     start_date: date
     end_date: date
-    status_by_day: Optional[Dict[str, str]] = {}
+    status_by_day: Optional[dict] = {}
 
 class TaskCreate(TaskBase):
     pass
 
-class TaskRead(TaskBase):
+class TaskUpdate(TaskBase):
+    pass
+
+class TaskOut(TaskBase):
     id: int
+
     class Config:
         orm_mode = True
+
+# ------------------ TEAM SCHEMAS ------------------
+class TeamBase(BaseModel):
+    name: str
+    email_to: Optional[str] = None
+    email_cc: Optional[str] = None
+
+class TeamCreate(TeamBase):
+    pass
+
+class TeamOut(TeamBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+# ------------------ SUBSYSTEM SCHEMAS ------------------
+class SubsystemBase(BaseModel):
+    name: str
+
+class SubsystemCreate(SubsystemBase):
+    pass
+
+class SubsystemOut(SubsystemBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+# ------------------ PROJECT PHASE SCHEMAS ------------------
+class ProjectPhaseBase(BaseModel):
+    date: date
+    label: str
+
+class ProjectPhaseCreate(ProjectPhaseBase):
+    pass
+
+class ProjectPhaseOut(ProjectPhaseBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+# ------------------ DAILY SUMMARY SCHEMA ------------------
+class DailySummary(BaseModel):
+    date: date
+    subsystem_id: Optional[int] = None
+    team_id: Optional[int] = None
+    completed_tasks: List[TaskOut]
+    pending_tasks: List[TaskOut]
