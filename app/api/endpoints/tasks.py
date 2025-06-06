@@ -1,4 +1,3 @@
-// app/api/endpoints/tasks.py (routes only)
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
