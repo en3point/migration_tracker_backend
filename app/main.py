@@ -1,24 +1,21 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints.tasks import router as tasks_router
+from app.api.endpoints.tasks import router  # ← this must match your updated file path
 from app.db.database import Base, engine
 
 app = FastAPI()
 
-# ✅ Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with Vercel frontend domain for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ Create DB tables
 Base.metadata.create_all(bind=engine)
 
-# ✅ Global error handler that preserves CORS headers
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -32,5 +29,4 @@ async def global_exception_handler(request: Request, exc: Exception):
         },
     )
 
-# ✅ Register all routes
-app.include_router(tasks_router)
+app.include_router(router)
