@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
-from app.models import Task, TaskBucket, Subsystem
+from app.models import Task, TaskBucket, Subsystem, ProjectPhase
 from app.db import schemas
 from io import BytesIO
 import pandas as pd
