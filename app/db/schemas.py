@@ -1,19 +1,38 @@
 # app/db/schemas.py
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import date
 
-# ------------------ TASK SCHEMAS ------------------
+# ------------------ TASK BUCKET ------------------
+class TaskBucketBase(BaseModel):
+    name: str
+    order: int
+
+class TaskBucketCreate(TaskBucketBase):
+    pass
+
+class TaskBucketUpdate(TaskBucketBase):
+    pass
+
+class TaskBucketOut(TaskBucketBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# ------------------ TASK ------------------
 class TaskBase(BaseModel):
+    task_bucket_id: int
     subsystem_id: int
-    team_id: Optional[int] = None
+    team_id: int
     vendor_system: Optional[str] = None
     subject: str
     description: str
     detailed_description: Optional[str] = None
     start_date: date
     end_date: date
-    status_by_day: Optional[dict] = {}
+    status_by_day: Optional[Dict[str, str]] = {}
+    order: int
 
 class TaskCreate(TaskBase):
     pass
@@ -25,9 +44,9 @@ class TaskOut(TaskBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# ------------------ TEAM SCHEMAS ------------------
+# ------------------ TEAM ------------------
 class TeamBase(BaseModel):
     name: str
     email_to: Optional[str] = None
@@ -40,9 +59,9 @@ class TeamOut(TeamBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# ------------------ SUBSYSTEM SCHEMAS ------------------
+# ------------------ SUBSYSTEM ------------------
 class SubsystemBase(BaseModel):
     name: str
 
@@ -53,9 +72,9 @@ class SubsystemOut(SubsystemBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# ------------------ PROJECT PHASE SCHEMAS ------------------
+# ------------------ PROJECT PHASE ------------------
 class ProjectPhaseBase(BaseModel):
     date: date
     label: str
@@ -67,9 +86,9 @@ class ProjectPhaseOut(ProjectPhaseBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# ------------------ DAILY SUMMARY SCHEMA ------------------
+# ------------------ DAILY SUMMARY ------------------
 class DailySummary(BaseModel):
     date: date
     subsystem_id: Optional[int] = None

@@ -1,15 +1,17 @@
+# app/api/endpoints/tasks.py
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
-from app.db.models import Task, Team, Subsystem, ProjectPhase
-from app.db.schemas import TaskCreate, TaskUpdate, TaskOut, TeamCreate, TeamOut, SubsystemCreate, SubsystemOut, ProjectPhaseCreate, ProjectPhaseOut, DailySummary
-from datetime import date
-from typing import List, Optional
-import pandas as pd
+from app.models import Task, Team, Subsystem, ProjectPhase
+from app.db import schemas
 from io import BytesIO
+import pandas as pd
+from typing import List, Optional
+from datetime import date
 
 router = APIRouter()
 
+# ------------------ DB DEPENDENCY ------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -18,27 +20,27 @@ def get_db():
         db.close()
 
 # ------------------ TASK ENDPOINTS ------------------
-@router.post("/tasks/", response_model=TaskOut)
-def create_task(task: TaskCreate, db: Session = Depends(get_db)):
+@router.post("/tasks/", response_model=schemas.TaskOut)
+def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     db_task = Task(**task.dict())
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
 
-@router.get("/tasks/", response_model=List[TaskOut])
+@router.get("/tasks/", response_model=List[schemas.TaskOut])
 def read_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(Task).offset(skip).limit(limit).all()
 
-@router.get("/tasks/{task_id}", response_model=TaskOut)
+@router.get("/tasks/{task_id}", response_model=schemas.TaskOut)
 def read_task(task_id: int, db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
 
-@router.put("/tasks/{task_id}", response_model=TaskOut)
-def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
+@router.put("/tasks/{task_id}", response_model=schemas.TaskOut)
+def update_task(task_id: int, task: schemas.TaskUpdate, db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -58,20 +60,20 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     return {"message": "Task deleted successfully"}
 
 # ------------------ TEAM ENDPOINTS ------------------
-@router.post("/teams/", response_model=TeamOut)
-def create_team(team: TeamCreate, db: Session = Depends(get_db)):
+@router.post("/teams/", response_model=schemas.TeamOut)
+def create_team(team: schemas.TeamCreate, db: Session = Depends(get_db)):
     db_team = Team(**team.dict())
     db.add(db_team)
     db.commit()
     db.refresh(db_team)
     return db_team
 
-@router.get("/teams/", response_model=List[TeamOut])
+@router.get("/teams/", response_model=List[schemas.TeamOut])
 def read_teams(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(Team).offset(skip).limit(limit).all()
 
-@router.put("/teams/{team_id}", response_model=TeamOut)
-def update_team(team_id: int, team: TeamCreate, db: Session = Depends(get_db)):
+@router.put("/teams/{team_id}", response_model=schemas.TeamOut)
+def update_team(team_id: int, team: schemas.TeamCreate, db: Session = Depends(get_db)):
     db_team = db.query(Team).filter(Team.id == team_id).first()
     if not db_team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -91,20 +93,20 @@ def delete_team(team_id: int, db: Session = Depends(get_db)):
     return {"message": "Team deleted successfully"}
 
 # ------------------ SUBSYSTEM ENDPOINTS ------------------
-@router.post("/subsystems/", response_model=SubsystemOut)
-def create_subsystem(subsystem: SubsystemCreate, db: Session = Depends(get_db)):
+@router.post("/subsystems/", response_model=schemas.SubsystemOut)
+def create_subsystem(subsystem: schemas.SubsystemCreate, db: Session = Depends(get_db)):
     db_subsystem = Subsystem(**subsystem.dict())
     db.add(db_subsystem)
     db.commit()
     db.refresh(db_subsystem)
     return db_subsystem
 
-@router.get("/subsystems/", response_model=List[SubsystemOut])
+@router.get("/subsystems/", response_model=List[schemas.SubsystemOut])
 def read_subsystems(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(Subsystem).offset(skip).limit(limit).all()
 
-@router.put("/subsystems/{subsystem_id}", response_model=SubsystemOut)
-def update_subsystem(subsystem_id: int, subsystem: SubsystemCreate, db: Session = Depends(get_db)):
+@router.put("/subsystems/{subsystem_id}", response_model=schemas.SubsystemOut)
+def update_subsystem(subsystem_id: int, subsystem: schemas.SubsystemCreate, db: Session = Depends(get_db)):
     db_subsystem = db.query(Subsystem).filter(Subsystem.id == subsystem_id).first()
     if not db_subsystem:
         raise HTTPException(status_code=404, detail="Subsystem not found")
@@ -123,21 +125,21 @@ def delete_subsystem(subsystem_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Subsystem deleted successfully"}
 
-# ------------------ PHASE ENDPOINTS ------------------
-@router.post("/phases/", response_model=ProjectPhaseOut)
-def create_project_phase(phase: ProjectPhaseCreate, db: Session = Depends(get_db)):
+# ------------------ PROJECT PHASE ENDPOINTS ------------------
+@router.post("/phases/", response_model=schemas.ProjectPhaseOut)
+def create_project_phase(phase: schemas.ProjectPhaseCreate, db: Session = Depends(get_db)):
     db_phase = ProjectPhase(**phase.dict())
     db.add(db_phase)
     db.commit()
     db.refresh(db_phase)
     return db_phase
 
-@router.get("/phases/", response_model=List[ProjectPhaseOut])
+@router.get("/phases/", response_model=List[schemas.ProjectPhaseOut])
 def read_project_phases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(ProjectPhase).offset(skip).limit(limit).all()
 
-@router.put("/phases/{phase_id}", response_model=ProjectPhaseOut)
-def update_project_phase(phase_id: int, phase: ProjectPhaseCreate, db: Session = Depends(get_db)):
+@router.put("/phases/{phase_id}", response_model=schemas.ProjectPhaseOut)
+def update_project_phase(phase_id: int, phase: schemas.ProjectPhaseCreate, db: Session = Depends(get_db)):
     db_phase = db.query(ProjectPhase).filter(ProjectPhase.id == phase_id).first()
     if not db_phase:
         raise HTTPException(status_code=404, detail="Project phase not found")
@@ -156,8 +158,8 @@ def delete_project_phase(phase_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Project phase deleted successfully"}
 
-# ------------------ DAILY SUMMARY ------------------
-@router.get("/daily-summary/", response_model=DailySummary)
+# ------------------ DAILY SUMMARY ENDPOINT ------------------
+@router.get("/daily-summary/", response_model=schemas.DailySummary)
 def get_daily_summary(
     date_query: date,
     subsystem_id: Optional[int] = None,
@@ -179,13 +181,13 @@ def get_daily_summary(
 
     for task in tasks:
         status = task.status_by_day.get(str(date_query), "Pending")
-        serialized = TaskOut.from_orm(task)
+        serialized = schemas.TaskOut.from_orm(task)
         if status.lower() == "done":
             completed.append(serialized)
         else:
             pending.append(serialized)
 
-    return DailySummary(
+    return schemas.DailySummary(
         date=date_query,
         subsystem_id=subsystem_id,
         team_id=team_id,
@@ -193,7 +195,7 @@ def get_daily_summary(
         pending_tasks=pending
     )
 
-# ------------------ EXCEL IMPORT ------------------
+# ------------------ EXCEL IMPORT ENDPOINT ------------------
 @router.post("/import-excel/")
 def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
     content = file.file.read()
@@ -243,7 +245,9 @@ def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
                     detailed_description=detailed_description,
                     start_date=pd.to_datetime("2025-03-01"),
                     end_date=pd.to_datetime("2025-04-01"),
-                    status_by_day={}
+                    status_by_day={},
+                    order=0,
+                    task_bucket_id=1  # ⚠️ Update with actual logic
                 )
                 db.add(task)
 

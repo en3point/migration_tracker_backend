@@ -29,16 +29,30 @@ class ProjectPhase(Base):
 class Task(Base):
     __tablename__ = "tasks"
     __table_args__ = {'extend_existing': True}  # ✅ Prevent redefinition error
+
     id = Column(Integer, primary_key=True, index=True)
+    task_bucket_id = Column(Integer, ForeignKey("task_buckets.id"), nullable=False)
     subsystem_id = Column(Integer, ForeignKey("subsystems.id"))
-    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
-    vendor_system = Column(String, nullable=True)
-    subject = Column(String)
-    description = Column(Text)
-    detailed_description = Column(Text, nullable=True)
+    team_id = Column(Integer, ForeignKey("teams.id"))
+    vendor_system = Column(String)
+    subject = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    detailed_description = Column(String)
     start_date = Column(Date)
     end_date = Column(Date)
     status_by_day = Column(JSON, default={})
+    order = Column(Integer, nullable=False)
 
-    subsystem = relationship("Subsystem", back_populates="tasks")
-    team = relationship("Team", back_populates="tasks")
+    task_bucket = relationship("TaskBucket", back_populates="tasks")
+    subsystem = relationship("Subsystem")
+    team = relationship("Team")
+    
+class TaskBucket(Base):
+    __tablename__ = "task_buckets"
+    __table_args__ = {'extend_existing': True}  # ✅ Prevent redefinition error
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    order = Column(Integer, nullable=False)
+
+    tasks = relationship("Task", back_populates="task_bucket", cascade="all, delete")
