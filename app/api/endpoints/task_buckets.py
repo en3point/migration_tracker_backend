@@ -39,6 +39,14 @@ def read_task_bucket(bucket_id: int, db: Session = Depends(get_db)):
     if not db_bucket:
         raise HTTPException(status_code=404, detail="TaskBucket not found")
     return db_bucket
+    
+@router.get("/task-buckets/by-phase/{phase_id}", response_model=List[schemas.TaskBucketOut])
+def read_task_buckets_by_phase(phase_id: int, db: Session = Depends(get_db)):
+    phase = db.query(ProjectPhase).filter(ProjectPhase.id == phase_id).first()
+    if not phase:
+        raise HTTPException(status_code=404, detail="ProjectPhase not found")
+    return db.query(TaskBucket).filter(TaskBucket.phase_id == phase_id).order_by(TaskBucket.order).all()
+
 
 @router.put("/task-buckets/{bucket_id}", response_model=schemas.TaskBucketOut)
 def update_task_bucket(bucket_id: int, bucket: schemas.TaskBucketUpdate, db: Session = Depends(get_db)):

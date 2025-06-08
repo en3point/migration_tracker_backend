@@ -42,6 +42,13 @@ def read_task(task_id: int, db: Session = Depends(get_db)):
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
+    
+@router.get("/tasks/by-bucket/{bucket_id}", response_model=List[schemas.TaskOut])
+def read_tasks_by_bucket(bucket_id: int, db: Session = Depends(get_db)):
+    bucket = db.query(TaskBucket).filter(TaskBucket.id == bucket_id).first()
+    if not bucket:
+        raise HTTPException(status_code=404, detail="TaskBucket not found")
+    return db.query(Task).filter(Task.task_bucket_id == bucket_id).order_by(Task.order).all()
 
 @router.put("/tasks/{task_id}", response_model=schemas.TaskOut)
 def update_task(task_id: int, task: schemas.TaskUpdate, db: Session = Depends(get_db)):
