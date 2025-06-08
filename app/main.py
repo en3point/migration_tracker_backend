@@ -2,11 +2,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints.tasks import router as tasks_router
-from app.api.endpoints.task_buckets import router as buckets_router
+from app.api.endpoints.task_buckets import router as task_buckets_router
+from app.api.endpoints.teams import router as teams_router
+from app.api.endpoints.subsystems import router as subsystems_router
+from app.api.endpoints.phases import router as phases_router
 from app.db.database import Base, engine
 
 app = FastAPI()
 
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,8 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Create DB tables
 Base.metadata.create_all(bind=engine)
 
+# Global error handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -30,6 +36,9 @@ async def global_exception_handler(request: Request, exc: Exception):
         },
     )
 
-# Register API routes
+# Include routers
 app.include_router(tasks_router)
-app.include_router(buckets_router)
+app.include_router(task_buckets_router)
+app.include_router(teams_router)
+app.include_router(subsystems_router)
+app.include_router(phases_router)
