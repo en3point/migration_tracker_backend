@@ -7,12 +7,15 @@ from datetime import date
 class TaskBucketBase(BaseModel):
     name: str
     order: int
+    phase_id: int  # ✅ This is required for linking
 
 class TaskBucketCreate(TaskBucketBase):
     pass
 
-class TaskBucketUpdate(TaskBucketBase):
-    pass
+class TaskBucketUpdate(BaseModel):
+    name: Optional[str] = None
+    order: Optional[int] = None
+    phase_id: Optional[int] = None  # ✅ Also allow updating phase
 
 class TaskBucketOut(TaskBucketBase):
     id: int
