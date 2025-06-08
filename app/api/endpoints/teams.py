@@ -5,7 +5,7 @@ from app.models import Team
 from app.db import schemas
 from typing import List
 
-router = APIRouter()
+router = APIRouter(tags=["Teams"])
 
 def get_db():
     db = SessionLocal()

@@ -5,7 +5,7 @@ from app.models import ProjectPhase
 from app.db import schemas
 from typing import List
 
-router = APIRouter()
+router = APIRouter(tags=["Phases"])
 
 def get_db():
     db = SessionLocal()

@@ -5,7 +5,7 @@ from app.models import TaskBucket, Task
 from app.db import schemas
 from typing import List
 
-router = APIRouter()
+router = APIRouter(tags=["Task Buckets"])
 
 # Dependency to get DB session
 def get_db():

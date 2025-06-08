@@ -9,7 +9,7 @@ import pandas as pd
 from typing import List, Optional
 from datetime import date
 
-router = APIRouter()
+router = APIRouter(tags=["Tasks"])
 
 # ------------------ DB DEPENDENCY ------------------
 def get_db():

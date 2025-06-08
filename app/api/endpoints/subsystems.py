@@ -5,7 +5,7 @@ from app.models import Subsystem
 from app.db import schemas
 from typing import List
 
-router = APIRouter()
+router = APIRouter(tags=["SubSystems"])
 
 def get_db():
     db = SessionLocal()
