@@ -102,3 +102,17 @@ class DailySummary(BaseModel):
     team_id: Optional[int] = None
     completed_tasks: List[TaskOut]
     pending_tasks: List[TaskOut]
+
+
+# ------------------ PROJECT SUMMARY ------------------
+class ProjectBase(BaseModel):
+    name: str
+
+class ProjectCreate(ProjectBase):
+    pass
+
+class ProjectOut(ProjectBase):
+    id: int
+
+    class Config:
+        from_attributes = True
