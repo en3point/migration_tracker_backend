@@ -88,6 +88,10 @@ class ProjectPhaseCreate(ProjectPhaseBase):
 class ProjectPhaseOut(ProjectPhaseBase):
     id: int
 
+class ProjectPhaseUpdate(BaseModel):
+    name: Optional[str] = None
+    order: Optional[int] = None
+
     class Config:
         from_attributes = True
 
