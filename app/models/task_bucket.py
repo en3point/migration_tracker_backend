@@ -8,8 +8,10 @@ class TaskBucket(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     order = Column(Integer, nullable=False)
-    phase_id = Column(Integer, ForeignKey("project_phases.id"), nullable=False)
 
-    # Relationships
-    tasks = relationship("Task", back_populates="task_bucket", cascade="all, delete")
+    phase_id = Column(Integer, ForeignKey("project_phases.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+
+    tasks = relationship("Task", back_populates="bucket", cascade="all, delete")
     phase = relationship("ProjectPhase", back_populates="task_buckets")
+    project = relationship("Project", back_populates="task_buckets")

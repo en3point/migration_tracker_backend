@@ -1,11 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.endpoints.tasks import router as tasks_router
 from app.api.endpoints.task_buckets import router as task_buckets_router
 from app.api.endpoints.teams import router as teams_router
 from app.api.endpoints.subsystems import router as subsystems_router
 from app.api.endpoints.phases import router as phases_router
+from app.api.endpoints.projects import router as projects_router  # ← NEW
+
 from app.db.database import Base, engine
 
 app = FastAPI()
@@ -37,8 +40,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Include routers
-app.include_router(tasks_router)
+app.include_router(projects_router)         # ← Added first for hierarchy
+app.include_router(phases_router)
 app.include_router(task_buckets_router)
+app.include_router(tasks_router)
 app.include_router(teams_router)
 app.include_router(subsystems_router)
-app.include_router(phases_router)
