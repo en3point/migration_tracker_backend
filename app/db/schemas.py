@@ -81,15 +81,21 @@ class SubsystemOut(SubsystemBase):
 class ProjectPhaseBase(BaseModel):
     date: date
     label: str
+    project_id: int  # ✅ Added this to reflect project linkage
 
 class ProjectPhaseCreate(ProjectPhaseBase):
     pass
 
 class ProjectPhaseOut(ProjectPhaseBase):
     id: int
+    order: int
+
+    class Config:
+        from_attributes = True
 
 class ProjectPhaseUpdate(BaseModel):
-    name: Optional[str] = None
+    label: Optional[str] = None
+    date: Optional[date] = None
     order: Optional[int] = None
 
     class Config:
