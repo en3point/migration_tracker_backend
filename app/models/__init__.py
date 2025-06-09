@@ -1,3 +1,4 @@
+from .project import Project
 from .project_phase import ProjectPhase
 from .team import Team
 from .subsystem import Subsystem
